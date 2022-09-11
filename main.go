@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	fmt.Println("hello world")
+	fmt.Println("GPS-Track-Recorder")
 
 	// Retrieve the port list
 	ports, err := serial.GetPortsList()
@@ -51,12 +51,13 @@ func main() {
 				fmt.Println("\nEOF")
 				break
 			}
-
-			fmt.Printf("%s", string(buff[:n]))
+			fmt.Println(buff[:n])
+			// fmt.Printf("%s", string(buff[:n]))
 
 			// If we receive a newline stop reading
 			if strings.Contains(string(buff[:n]), "\n") {
 				break
+				fmt.Println("test")
 			}
 		}
 	}
