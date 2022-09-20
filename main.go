@@ -22,20 +22,20 @@ func getGPSPosition(sentence string) (string, string, string, string, string, st
 
 	switch {
 	case string(data[0]) == "$GPGGA":
-		// id = data[0]
+		id = data[0]
 		latitude = data[2]
 		ns = data[3]
 		longitude = data[4]
 		ew = data[5]
 	case string(data[0]) == "$GPGLL":
-		// id = data[0]
+		id = data[0]
 		latitude = data[1]
 		ns = data[2]
 		longitude = data[3]
 		ew = data[4]
 
 	case string(data[0]) == "$GPVTG":
-		//	id = data[0]
+		id = data[0]
 		degree = data[1]
 
 	case string(data[0]) == "$GPRMC":
@@ -268,7 +268,7 @@ func SettingsStyle(xdata string) string {
 func main() {
 	fmt.Println("GPS-Track-Recorder")
 	fmt.Printf("Operating System : %s\n", runtime.GOOS)
-	//Openbrowser("http://localhost:8080/")
+	Openbrowser("http://localhost:8080/")
 	ports, err := serial.GetPortsList()
 	if err != nil {
 		log.Fatal(err)
