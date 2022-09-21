@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
+	"net/http"
+	"os"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -35,7 +38,7 @@ func getGPSPosition(sentence string) (string, string, string, string, string, st
 		ew = data[4]
 
 	case string(data[0]) == "$GPVTG":
-		id = data[0]
+		//id = data[0]
 		degree = data[1]
 
 	case string(data[0]) == "$GPRMC":
@@ -48,10 +51,13 @@ func getGPSPosition(sentence string) (string, string, string, string, string, st
 		degree = data[8]
 
 	case string(data[0]) == "$GPGSA":
+		id = data[0]
 
 	case string(data[0]) == "$GPGSV":
+		//id = data[0]
 
 	case string(data[0]) == "$GPTXT":
+		id = data[0]
 
 	default:
 		fmt.Println("-- %s", data[0])
@@ -80,6 +86,7 @@ func Openbrowser(url string) error {
 
 //------------------------------------------------------------------  Pages
 func StartPage() string {
+	xip := "localhost"
 	xdata := "<!DOCTYPE html>"
 	xdata = xdata + "<html>"
 	xdata = xdata + "<head>"
@@ -89,7 +96,22 @@ func StartPage() string {
 	xdata = xdata + "</head>"
 	xdata = xdata + "<body onload='startTime()'>"
 	xdata = xdata + "<p>XStart Page</p>"
+	host, _ := os.Hostname()
+	addrs, _ := net.LookupIP(host)
+
+	for _, addr := range addrs {
+		if ipv4 := addr.To4(); ipv4 != nil {
+			xip = fmt.Sprintf("%s", ipv4)
+		}
+	}
+	xdata = xdata + "<p> Host Port IP : " + xip + "</p>"
+
+	xdata = xdata + "  <A HREF='http://com1software.com'> [ Com1Software Home Page ] </A>  "
+	xdata = xdata + "  <A HREF='http://" + xip + ":8080/about'> [ About ] </A>  "
+	xdata = xdata + "  <A HREF='http://" + xip + ":8080/systems'> [ Systems ] </A>  "
+	xdata = xdata + "  <A HREF='http://" + xip + ":8080/playground'> [ PlayGround ] </A>  "
 	xdata = xdata + "<BR> GPS-Dashboard <BR> (c) 1992-2022 Com1 Software Development"
+	xdata = xdata + "<div id='txt'></div>"
 	xdata = xdata + " </body>"
 	xdata = xdata + " </html>"
 	return xdata
@@ -266,9 +288,30 @@ func SettingsStyle(xdata string) string {
 
 //-------------------------------------------------------------------------
 func main() {
+	GPSChan := make(chan []GPSData)
 	fmt.Println("GPS-Track-Recorder")
 	fmt.Printf("Operating System : %s\n", runtime.GOOS)
-	Openbrowser("http://localhost:8080/")
+	//------------------------------------------------ Home Page
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		xdata := StartPage()
+		fmt.Fprint(w, xdata)
+	})
+	//------------------------------------------------ Settings Page
+	http.HandleFunc("/settings", func(w http.ResponseWriter, r *http.Request) {
+		xdata := TestPage1()
+		fmt.Fprint(w, xdata)
+	})
+	go rungps(GPSChan)
+	// Openbrowser("http://localhost:8080/")
+	http.ListenAndServe(":8080", nil)
+
+}
+
+type GPSData struct {
+	Line string
+}
+
+func rungps(dataChan chan []GPSData) {
 	ports, err := serial.GetPortsList()
 	if err != nil {
 		log.Fatal(err)
@@ -314,9 +357,9 @@ func main() {
 			}
 
 		}
-		//fmt.Println(line)
 		id, latitude, longitude, ns, ew, speed, degree := getGPSPosition(line)
 		if len(id) > 0 {
+			// fmt.Println(line)
 			fmt.Printf("%s  latitude=%s  %s  longitude=%s %s  knots=%s degrees=%s\n", id, latitude, ns, longitude, ew, speed, degree)
 		}
 	}
