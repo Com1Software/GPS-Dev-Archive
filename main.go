@@ -75,9 +75,13 @@ func Openbrowser(url string) error {
 	case "windows":
 		cmd = "cmd"
 		args = []string{"/c", "start"}
+	case "linux":
+		cmd = "chromium-browser"
+		args = []string{""}
+
 	case "darwin":
 		cmd = "open"
-	default: // "linux", "freebsd", "openbsd", "netbsd"
+	default:
 		cmd = "xdg-open"
 	}
 	args = append(args, url)
@@ -302,7 +306,7 @@ func main() {
 		fmt.Fprint(w, xdata)
 	})
 	go rungps(GPSChan)
-	// Openbrowser("http://localhost:8080/")
+	Openbrowser("http://localhost:8080/")
 	http.ListenAndServe(":8080", nil)
 
 }
